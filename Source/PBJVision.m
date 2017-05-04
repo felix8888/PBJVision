@@ -125,6 +125,7 @@ typedef NS_ENUM(GLint, PBJVisionUniformLocationTypes)
     BOOL _autoFreezePreviewDuringCapture;
     BOOL _usesApplicationAudioSession;
     BOOL _automaticallyConfiguresApplicationAudioSession;
+    BOOL _locked;
 
     PBJFocusMode _focusMode;
     PBJExposureMode _exposureMode;
@@ -484,7 +485,8 @@ typedef NS_ENUM(GLint, PBJVisionUniformLocationTypes)
         return;
     
     _focusMode = focusMode;
-    
+    _locked = focusMode == PBJFocusModeLocked;
+
     NSError *error = nil;
     if (_currentDevice && [_currentDevice lockForConfiguration:&error]) {
         [_currentDevice setFocusMode:(AVCaptureFocusMode)focusMode];
@@ -1403,7 +1405,7 @@ typedef void (^PBJVisionBlock)();
     if ([_delegate respondsToSelector:@selector(visionWillStartFocus:)])
         [_delegate visionWillStartFocus:self];
 
-    CGPoint focusPoint = CGPointMake(0.5f, 0.5f);
+    CGPoint focusPoint = _locked ? _currentDevice.focusPointOfInterest : CGPointMake(0.5f, 0.5f);
     [self focusAtAdjustedPointOfInterest:focusPoint];
 }
 
