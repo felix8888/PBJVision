@@ -48,7 +48,7 @@ static uint64_t const PBJVisionRequiredMinimumDiskSpaceInBytes = 49999872; // ~ 
 static CGFloat const PBJVisionThumbnailWidth = 160.0f;
 
 // KVO contexts
-
+static NSString * const PBJVisionFocusModeObserverContext = @"PBJVisionFocusModeObserverContext";
 static NSString * const PBJVisionFocusObserverContext = @"PBJVisionFocusObserverContext";
 static NSString * const PBJVisionExposureObserverContext = @"PBJVisionExposureObserverContext";
 static NSString * const PBJVisionWhiteBalanceObserverContext = @"PBJVisionWhiteBalanceObserverContext";
@@ -866,6 +866,7 @@ typedef void (^PBJVisionBlock)();
     [notificationCenter addObserver:self selector:@selector(_deviceSubjectAreaDidChange:) name:AVCaptureDeviceSubjectAreaDidChangeNotification object:nil];
 
     // current device KVO notifications
+    [self addObserver:self forKeyPath:@"currentDevice.focusMode" options:NSKeyValueObservingOptionNew context:(__bridge void *)PBJVisionFocusModeObserverContext];
     [self addObserver:self forKeyPath:@"currentDevice.adjustingFocus" options:NSKeyValueObservingOptionNew context:(__bridge void *)PBJVisionFocusObserverContext];
     [self addObserver:self forKeyPath:@"currentDevice.adjustingExposure" options:NSKeyValueObservingOptionNew context:(__bridge void *)PBJVisionExposureObserverContext];
     [self addObserver:self forKeyPath:@"currentDevice.adjustingWhiteBalance" options:NSKeyValueObservingOptionNew context:(__bridge void *)PBJVisionWhiteBalanceObserverContext];
@@ -889,6 +890,7 @@ typedef void (^PBJVisionBlock)();
         return;
     
     // current device KVO notifications
+    [self removeObserver:self forKeyPath:@"currentDevice.focusMode"];
     [self removeObserver:self forKeyPath:@"currentDevice.adjustingFocus"];
     [self removeObserver:self forKeyPath:@"currentDevice.adjustingExposure"];
     [self removeObserver:self forKeyPath:@"currentDevice.adjustingWhiteBalance"];
@@ -2496,7 +2498,11 @@ previewPhotoSampleBuffer:(CMSampleBufferRef)previewPhotoSampleBuffer
 
 - (void)observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object change:(NSDictionary *)change context:(void *)context
 {
-    if ( context == (__bridge void *)PBJVisionFocusObserverContext ) {
+    if ( context == (__bridge void *)PBJVisionFocusModeObserverContext ) {
+        PBJFocusMode newMode = (PBJFocusMode)[[change objectForKey:NSKeyValueChangeNewKey] integerValue];
+        _focusMode = newMode;
+
+    } else if ( context == (__bridge void *)PBJVisionFocusObserverContext ) {
     
         BOOL isFocusing = [[change objectForKey:NSKeyValueChangeNewKey] boolValue];
         if (isFocusing) {
