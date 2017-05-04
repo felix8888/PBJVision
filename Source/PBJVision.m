@@ -2774,4 +2774,23 @@ previewPhotoSampleBuffer:(CMSampleBufferRef)previewPhotoSampleBuffer
     }
 }
 
+- (CGFloat)videoZoomFactor {
+    return _currentDevice.videoZoomFactor;
+}
+
+- (CGPoint)focusPoint {
+    return _currentDevice.focusPointOfInterest;
+}
+
+- (void)setVideoZoomFactor:(CGFloat)videoZoomFactor {
+    NSError *error = nil;
+    if ([_currentDevice lockForConfiguration:&error]) {
+        CGFloat factor = MAX(1, MIN(videoZoomFactor, _currentDevice.activeFormat.videoMaxZoomFactor));
+        _currentDevice.videoZoomFactor = factor;
+        [_currentDevice unlockForConfiguration];
+    } else {
+        NSLog(@"error: %@", error);
+    }
+}
+
 @end
